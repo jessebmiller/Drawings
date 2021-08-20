@@ -1,0 +1,59 @@
+{
+  "name": "@pride/eth",
+  "version": "0.0.1-dev",
+  "description": "Smart contracts for selling my artwork as NFTs",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "hardhat compile",
+    "test": "jest && yarn lint",
+    "lint": "yarn lint:typescript && yarn lint:solidity",
+    "lint:typescript": "ts-standard",
+    "lint:solidity": "solhint 'contracts/**/*.sol'",
+    "format": "yarn format:typescript && yarn format:solidity",
+    "format:typescript": "ts-standard --fix",
+    "format:solidity": "prettier 'contracts/**/*.sol' --write"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jessebmiller/Pride.git"
+  },
+  "author": "Jesse B. Miller <jesse@jessebmiller.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/jessebmiller/Pride/issues"
+  },
+  "homepage": "https://github.com/jessebmiller/Pride#readme",
+  "devDependencies": {
+    "@babel/core": "^7.15.0",
+    "@babel/preset-env": "^7.15.0",
+    "@babel/preset-typescript": "^7.15.0",
+    "@nomiclabs/hardhat-ethers": "^2.0.0",
+    "@nomiclabs/hardhat-waffle": "^2.0.0",
+    "@typechain/ethers-v5": "^7.0.1",
+    "@typechain/hardhat": "^2.3.0",
+    "@types/chai": "^4.2.21",
+    "@types/jest": "^27.0.1",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.6.1",
+    "babel-jest": "^27.0.6",
+    "chai": "^4.3.4",
+    "ethereum-waffle": "^3.0.0",
+    "ethers": "^5.0.0",
+    "hardhat": "^2.6.0",
+    "jest": "^27.0.6",
+    "prettier": "^2.3.2",
+    "prettier-plugin-solidity": "^1.0.0-beta.17",
+    "solhint": "^3.3.6",
+    "solhint-plugin-prettier": "^0.0.5",
+    "ts-jest": "^27.0.5",
+    "ts-node": "^10.2.0",
+    "ts-standard": "^10.0.0",
+    "typechain": "^5.1.2",
+    "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.3.0",
+    "keccak256": "^1.0.3",
+    "merkletreejs": "^0.2.24"
+  }
+}
