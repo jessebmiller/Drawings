@@ -76,7 +76,8 @@ describe('Sales and returns', () => {
         seasonSymbol,
         root,
         refundBasisPoints,
-        reserveToken.address
+        reserveToken.address,
+        deployerAddr
       ]
     )) as PrideSeason
 
@@ -93,6 +94,7 @@ describe('Sales and returns', () => {
 
   test('It mints and sells never sold available drawings', async () => {
     const price = await alicePride.getPrice()
+    const refundAmount = await alicePride.getSpeculativeRefundAmount(1)
     const drawing = includedDrawings[0] ?? ''
     const proof = proofs[drawing] ?? []
     if (proof === []) {
@@ -105,7 +107,12 @@ describe('Sales and returns', () => {
     // alice should transfer proce to the contract address
     await expect(async () => {
       return await alicePride.buy(aliceAddr, drawing, proof, price)
-    }).to.changeTokenBalance(reserveToken, alice, price.mul(-1))
+    }).to.changeTokenBalances(
+      reserveToken,
+      [alice, { getAddress: () => prideSeason.address }, deployer],
+      [price.mul(-1), refundAmount, price.sub(refundAmount)]
+    )
+
     expect(await alicePride.balanceOf(aliceAddr)).to.be.equal(1)
 
     // totalOwned should have increased by 1
@@ -131,7 +138,6 @@ describe('Sales and returns', () => {
       )
     ).to.be.reverted
 
-    expect((await aliceReserve.balanceOf(prideSeason.address)).eq(price)).to.be.equal(true)
     // bob shouldn't own any nfts
     expect((await bobPride.balanceOf(bobAddr)).eq(0)).to.be.equal(true)
     // totalOwned should not change
@@ -186,8 +192,8 @@ describe('Sales and returns', () => {
       return await bobPride.buy(bobAddr, drawing, proof, price)
     }).to.changeTokenBalances(
       reserveToken,
-      [bob, { getAddress: async () => { return prideSeason.address } }],
-      [price.mul(-1), price]
+      [bob, { getAddress: () => prideSeason.address }],
+      [price.mul(-1), refundAmount] // the rest goes to the beneficiary
     )
 
     // bob should own id 1
@@ -257,7 +263,7 @@ describe('Sales and returns', () => {
   })
 
   test("It doesn't mint anytning more than once", async () => {
-    const whaleStack = ethers.utils.parseEther('100000')
+    const whaleStack = ethers.utils.parseEther('1000000')
     await aliceReserve.approve(prideSeason.address, whaleStack)
     for (const drawing of includedDrawings) {
       const proof = proofs[drawing] ?? []
@@ -270,5 +276,20 @@ describe('Sales and returns', () => {
         alicePride.buy(aliceAddr, drawing, proof, whaleStack)
       ).to.be.reverted
     }
+  })
+
+  test('It pays the beneficiary', async () => {
+    const price = await alicePride.getPrice()
+    const refundAmount = await alicePride.getSpeculativeRefundAmount(1)
+    const drawing = includedDrawings[0] ?? ''
+    const proof = proofs[drawing] ?? []
+    await aliceReserve.approve(prideSeason.address, price)
+    await expect(async () => {
+      return await alicePride.buy(aliceAddr, drawing, proof, price)
+    }).to.changeTokenBalances(
+      reserveToken,
+      [alice, { getAddress: () => prideSeason.address }, deployer],
+      [price.mul(-1), refundAmount, price.sub(refundAmount)]
+    )
   })
 })

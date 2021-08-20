@@ -31,14 +31,18 @@ contract PrideSeason is ERC721URIStorage, IERC721Receiver {
 
     IERC20 public reserveToken;
 
-    uint16 public refundBasisPoints; // sell price portion of buy price
+    uint16 public refundBasisPoints; // return amount portion of buy price
+
+    // address that gets the difference buy and return amount
+    address public beneficiary;
 
     constructor(
         string memory seasonName,
         string memory seasonSymbol,
         bytes32 _includedDrawingsMerkleRoot,
         uint16 _refundBasisPoints,
-        IERC20 _reserveToken
+        IERC20 _reserveToken,
+        address _beneficiary
     ) ERC721(seasonName, seasonSymbol) {
         require(
             refundBasisPoints <= 10 * 1000,
@@ -47,6 +51,7 @@ contract PrideSeason is ERC721URIStorage, IERC721Receiver {
         includedDrawingsMerkleRoot = _includedDrawingsMerkleRoot;
         refundBasisPoints = _refundBasisPoints;
         reserveToken = _reserveToken;
+        beneficiary = _beneficiary;
     }
 
     modifier onlyAvailable(
@@ -83,11 +88,15 @@ contract PrideSeason is ERC721URIStorage, IERC721Receiver {
         uint256 price = getPrice();
         require(price <= maxPrice, "Price higher than maxPrice");
 
+        // transfer total to this contract
         reserveToken.safeTransferFrom(msg.sender, address(this), price);
 
         bytes32 drawingKey = keccak256(bytes(drawingURI));
         ownedDrawings[drawingKey] = true;
         totalOwned.increment();
+
+        // transfer beneficiary portion to beneficiary
+        reserveToken.safeTransfer(beneficiary, price.sub(getRefundAmount()));
 
         // transfer if it had been minted and returned
         uint256 returnedId = returnedDrawings[drawingKey];
